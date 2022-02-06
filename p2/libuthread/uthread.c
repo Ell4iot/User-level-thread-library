@@ -89,7 +89,7 @@ void uthread_yield(void)
     queue_enqueue(ready_queue, running_TCB_t);
     TCB_t previous_running_TCB_t = running_TCB_t;
     queue_dequeue(ready_queue,(void**)&running_TCB_t);
-    uthread_ctx_switch(previous_running_TCB_t,running_TCB_t);
+    uthread_ctx_switch(previous_running_TCB_t->context,running_TCB_t->context);
 	/* TODO */
 
 
