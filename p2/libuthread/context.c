@@ -4,7 +4,8 @@
 #include "private.h"
 #include "uthread.h"
 
-/* Size of the stack for a thread (in bytes) */
+/* Size of
+ * the stack for a thread (in bytes) */
 #define UTHREAD_STACK_SIZE 32768
 
 void uthread_ctx_switch(uthread_ctx_t *prev, uthread_ctx_t *next)
