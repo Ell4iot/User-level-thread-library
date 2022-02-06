@@ -13,7 +13,10 @@
 /* TODO */
 
 queue_t ready_queue = queue_create();
+queue_t running_queue = queue_create();
 uthread_t count;
+
+
 struct TCB {
     uthread_t TID;
     uthread_ctx_t context;
@@ -24,7 +27,7 @@ struct TCB {
 };
 
 typedef struct TCB* TCB_t;
-
+TCB_t running_TCB_t;
 int uthread_start(int preempt)
 {
 	/* TODO */
@@ -35,9 +38,6 @@ int uthread_start(int preempt)
     count = 0;
     thread->TID = 0;
     queue_enqueue(ready_queue, thread);
-
-
-
 
 	return -1;
 }
@@ -69,12 +69,16 @@ int uthread_create(uthread_func_t func)
 
 void uthread_yield(void)
 {
+    queue_enqueue(ready_queue, running_TCB_t);
+    TCB_t previous_running_TCB_t = running_TCB_t;
+    queue_dequeue(ready_queue,(void**)&running_TCB_t);
+    uthread_ctx_switch(previous_running_TCB_t,running_TCB_t);
 	/* TODO */
 }
 
 uthread_t uthread_self(void)
 {
-	/* TODO */
+
 	return -1;
 }
 
