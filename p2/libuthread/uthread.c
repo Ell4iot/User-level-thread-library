@@ -13,7 +13,7 @@
 /* TODO */
 
 queue_t ready_queue = queue_create();
-
+uthread_t count;
 struct TCB {
     uthread_t TID;
     uthread_ctx_t context;
@@ -32,6 +32,7 @@ int uthread_start(int preempt)
 
     // create the main thread
     TCB_t thread = (TCB_t) malloc(sizeof(struct TCB));
+    count = 0;
     thread->TID = 0;
     queue_enqueue(ready_queue, thread);
 
@@ -52,12 +53,17 @@ int uthread_create(uthread_func_t func)
 	/* TODO */
     // create new stack object
     TCB_t thread = (TCB_t) malloc(sizeof(struct TCB));
-    thread->TID = 0;
-    queue_enqueue(ready_queue, thread);
+    void* stack;
+    uthread_ctx_t uctx;
+
+    count++;
+    thread->TID = count;
 
     // allocate stack segment
-    uthread_ctx_alloc_stack()
-    uthread_ctx_init()
+    stack = uthread_ctx_alloc_stack();
+    uthread_ctx_init(uctx, stack, func);
+
+    queue_enqueue(ready_queue, thread);
 	return -1;
 }
 
