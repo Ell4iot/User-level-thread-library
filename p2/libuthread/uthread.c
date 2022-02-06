@@ -14,7 +14,9 @@
 
 queue_t ready_queue = queue_create();
 queue_t running_queue = queue_create();
+
 queue_t block_queue = queue_create();
+
 uthread_t count;
 
 
@@ -40,12 +42,14 @@ int uthread_start(int preempt)
     uthread_ctx_t uctx;
     count = 0;
 
+
     thread->TID = 0;
     thread->context = uctx;
 
     running_TCB_t = thread;
 
     queue_enqueue(ready_queue, thread);
+
 	return -1;
 }
 
@@ -82,6 +86,10 @@ int uthread_create(uthread_func_t func)
 
 void uthread_yield(void)
 {
+    queue_enqueue(ready_queue, running_TCB_t);
+    TCB_t previous_running_TCB_t = running_TCB_t;
+    queue_dequeue(ready_queue,(void**)&running_TCB_t);
+    uthread_ctx_switch(previous_running_TCB_t,running_TCB_t);
 	/* TODO */
 
 
@@ -92,7 +100,6 @@ void uthread_yield(void)
 
 uthread_t uthread_self(void)
 {
-	/* TODO */
 	return -1;
 }
 
