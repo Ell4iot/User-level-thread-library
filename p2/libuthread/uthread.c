@@ -13,7 +13,6 @@
 /* TODO */
 
 queue_t ready_queue = queue_create();
-queue_t running_queue = queue_create();
 queue_t block_queue = queue_create();
 queue_t zombie_queue = queue_create();
 uthread_t count;
@@ -58,7 +57,16 @@ int uthread_stop(void)
     if (queue_length(ready_queue)) {
         return -1;
     } else {
-
+        TCB_t temp;
+        while(queue_length(zombie_queue)) {
+            queue_dequeue(zombie_queue, (void**)&temp);
+            uthread_ctx_destroy_stack(temp->stack);
+            free(temp);
+        }
+        free(ready_queue);
+        free(block_queue);
+        free(zombie_queue);
+        return 0;
     }
 }
 
