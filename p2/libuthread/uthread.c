@@ -12,12 +12,6 @@
 #include "queue.h"
 /* TODO */
 
-queue_t ready_queue = queue_create();
-queue_t block_queue = queue_create();
-queue_t zombie_queue = queue_create();
-uthread_t count;
-
-
 struct TCB {
     uthread_t TID;
     uthread_ctx_t context;
@@ -29,26 +23,31 @@ struct TCB {
 
 typedef struct TCB* TCB_t;
 
+queue_t ready_queue;
+//queue_t block_queue = queue_create();
+queue_t zombie_queue;
+uthread_t count;
 TCB_t running_TCB_t;
 
 int uthread_start(int preempt)
 {
 	/* TODO */
     void(preempt);
+    ready_queue = queue_create();
+    zombie_queue = queue_create();
 
     // create the main thread
     TCB_t thread = (TCB_t) malloc(sizeof(struct TCB));
     uthread_ctx_t uctx;
     count = 0;
-
     thread->TID = 0;
     thread->context = uctx;
 
+    // current running thread is main thread
     running_TCB_t = thread;
-
     queue_enqueue(ready_queue, thread);
 
-	return -1;
+	return 0;
 }
 
 int uthread_stop(void)
@@ -57,14 +56,17 @@ int uthread_stop(void)
     if (queue_length(ready_queue)) {
         return -1;
     } else {
-        TCB_t temp;
         while(queue_length(zombie_queue)) {
+            TCB_t temp;
             queue_dequeue(zombie_queue, (void**)&temp);
+            // deallocate the stack of thread
             uthread_ctx_destroy_stack(temp->stack);
+            // free the entire thread
             free(temp);
         }
+        // free the queue
         free(ready_queue);
-        free(block_queue);
+        //free(block_queue);
         free(zombie_queue);
         return 0;
     }
@@ -87,7 +89,7 @@ int uthread_create(uthread_func_t func)
     thread->stack = stack;
 
     // initialize context
-    uthread_ctx_init(uctx, stack, func);
+    uthread_ctx_init(&uctx, stack, func);
     thread->context = uctx;
 
     queue_enqueue(ready_queue, thread);
@@ -104,7 +106,6 @@ void uthread_yield(void)
     uthread_ctx_switch(&(previous_running_TCB_t->context),
                        &(running_TCB_t->context));
 	/* TODO */
-
 }
 
 uthread_t uthread_self(void)
@@ -117,6 +118,7 @@ void uthread_exit(int retval)
 	/* TODO */
     running_TCB_t->retval = retval;
     queue_enqueue(zombie_queue, running_TCB_t);
+    uthread_yield();
 }
 
 int uthread_join(uthread_t tid, int *retval)
@@ -125,7 +127,7 @@ int uthread_join(uthread_t tid, int *retval)
 	if (tid == 0) {
         return -1;
     }
-
+    (void)retval;
     TCB_t current;
     current = running_TCB_t;
     queue_enqueue(block_queue, current);
@@ -138,5 +140,6 @@ int uthread_join(uthread_t tid, int *retval)
             break;
         }
     }
+    return 0;
 }
 
