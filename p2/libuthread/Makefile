@@ -3,14 +3,14 @@ targets:= libuthread
 lib := libuthread.a
 CC := gcc
 CFLAGS := -Wall -Werror -Wextra
-objs := queue.o
+objs := queue.o context.o uthread.o preempt.o
 AR := ar rcs
 all: $(targets)
 	
 libuthread: $(objs)
 	$(AR) $(lib) $^
 
-%.o: %.c %.h
+%.o: %.c 
 	$(CC) -c $< -o $@
 
 clean:

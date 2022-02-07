@@ -102,7 +102,7 @@ int uthread_create(uthread_func_t func)
 void uthread_yield(void)
 {
 
-    if (running_TCB_t->state) != 0) {
+    if ((running_TCB_t->state) != 0) {
         queue_enqueue(ready_queue, running_TCB_t);
     }
 
@@ -145,7 +145,7 @@ int uthread_join(uthread_t tid, int *retval)
 
     //queue_enqueue(block_queue, current);
 
-    while (true) {
+    while (1) {
         if (queue_length(ready_queue) > 0) {
             queue_dequeue(ready_queue, (void**)&running_TCB_t);
             running_TCB_t->state = 1;
