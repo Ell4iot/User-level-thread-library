@@ -55,7 +55,7 @@ int uthread_start(int preempt)
 int uthread_stop(void)
 {
 	/* TODO */
-    if (queue_length(ready_queue)) {
+    if (queue_length(ready_queue) != 0) {
         return -1;
     } else {
         while(queue_length(zombie_queue)) {
@@ -93,7 +93,7 @@ int uthread_create(uthread_func_t func)
     // initialize context
     uthread_ctx_init(&uctx, stack, func);
     thread->context = uctx;
-
+    thread->state = 1;
     queue_enqueue(ready_queue, thread);
 	//return -1;
     return count;
@@ -101,19 +101,24 @@ int uthread_create(uthread_func_t func)
 
 void uthread_yield(void)
 {
-
+    printf("\nbeginning of yield\n");
+    printf("tid: %d state: %d\n", running_TCB_t->TID ,running_TCB_t->state);
     if ((running_TCB_t->state) != 0) {
         queue_enqueue(ready_queue, running_TCB_t);
+        printf("line 108, current queue length: %d\n", queue_length(ready_queue));
     }
 
-    TCB_t previous_running_TCB_t = running_TCB_t;
+    TCB_t previous_running = running_TCB_t;
 
+    printf("queue length now is: %d\n", queue_length(ready_queue));
     if (!queue_length(ready_queue)) {
         queue_enqueue(ready_queue, the_main);
+        printf("line 114\n");
     }
     queue_dequeue(ready_queue,(void**)&running_TCB_t);
-
-    uthread_ctx_switch(&(previous_running_TCB_t->context),
+    printf("line 117, %hu\n", previous_running->TID);
+    printf("line 118, %hu\n", running_TCB_t->TID);
+    uthread_ctx_switch(&(previous_running->context),
                        &(running_TCB_t->context));
 	/* TODO */
 }
@@ -148,12 +153,12 @@ int uthread_join(uthread_t tid, int *retval)
     while (1) {
         if (queue_length(ready_queue) > 0) {
             queue_dequeue(ready_queue, (void**)&running_TCB_t);
-            running_TCB_t->state = 1;
             uthread_ctx_switch( &(current->context),&(running_TCB_t->context));
         } else {
             break;
         }
     }
+    printf("end of join\n");
     return 0;
 }
 

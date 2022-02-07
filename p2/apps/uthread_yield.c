@@ -44,6 +44,7 @@ int main(void)
 	uthread_start(0);
 	uthread_join(uthread_create(thread1), NULL);
 	uthread_stop();
+    printf("end of the main\n");
 
 	return 0;
 }
