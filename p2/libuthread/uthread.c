@@ -24,15 +24,16 @@ struct TCB {
 typedef struct TCB* TCB_t;
 
 queue_t ready_queue;
-//queue_t block_queue = queue_create();
+// queue_t block_queue = queue_create();
 queue_t zombie_queue;
 uthread_t count;
 TCB_t running_TCB_t;
+TCB_t the_main;
 
 int uthread_start(int preempt)
 {
 	/* TODO */
-    void(preempt);
+    (void)preempt;
     ready_queue = queue_create();
     zombie_queue = queue_create();
 
@@ -99,8 +100,16 @@ int uthread_create(uthread_func_t func)
 
 void uthread_yield(void)
 {
-    queue_enqueue(ready_queue, running_TCB_t);
+
+    if (running_TCB_t->state) != 0) {
+        queue_enqueue(ready_queue, running_TCB_t);
+    }
+
     TCB_t previous_running_TCB_t = running_TCB_t;
+
+    if (!queue_length(ready_queue)) {
+        queue_enqueue(ready_queue, the_main);
+    }
     queue_dequeue(ready_queue,(void**)&running_TCB_t);
 
     uthread_ctx_switch(&(previous_running_TCB_t->context),
@@ -117,6 +126,7 @@ void uthread_exit(int retval)
 {
 	/* TODO */
     running_TCB_t->retval = retval;
+    running_TCB_t->state = 0;
     queue_enqueue(zombie_queue, running_TCB_t);
     uthread_yield();
 }
@@ -130,11 +140,13 @@ int uthread_join(uthread_t tid, int *retval)
     (void)retval;
     TCB_t current;
     current = running_TCB_t;
+    the_main = current;
     queue_enqueue(block_queue, current);
 
     while (true) {
         if (queue_length(ready_queue) > 0) {
             queue_dequeue(ready_queue, (void**)&running_TCB_t);
+            running_TCB_t->state = 1;
             uthread_ctx_switch( &(current->context),&(running_TCB_t->context));
         } else {
             break;
