@@ -46,7 +46,8 @@ int uthread_start(int preempt)
 
     // current running thread is main thread
     running_TCB_t = thread;
-    queue_enqueue(ready_queue, thread);
+    the_main = thread;
+    //queue_enqueue(ready_queue, thread);
 
 	return 0;
 }
@@ -138,10 +139,11 @@ int uthread_join(uthread_t tid, int *retval)
         return -1;
     }
     (void)retval;
+
     TCB_t current;
     current = running_TCB_t;
-    the_main = current;
-    queue_enqueue(block_queue, current);
+
+    //queue_enqueue(block_queue, current);
 
     while (true) {
         if (queue_length(ready_queue) > 0) {
