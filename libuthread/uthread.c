@@ -167,7 +167,6 @@ int uthread_join(uthread_t tid, int *retval)
     // find in the queue whether is joined or not
     TCB_t thread_to_join = NULL;
     queue_iterate(ready_queue, find_item, (void*)&tid, (void**)&thread_to_join);
-    printf(" 170\n");
     if (thread_to_join == NULL) {
         // tid not found
         //printf("tid %hu not found\n", tid);
@@ -177,19 +176,17 @@ int uthread_join(uthread_t tid, int *retval)
         //printf("tid %hu is already being joined\n", tid);
         return -1;
     }
-    printf(" 180\n");
     thread_to_join->parent = running_thread;
     running_thread->child = thread_to_join;
-    printf(" 183\n");
     if (thread_to_join->state != ZOMBIE) {
         running_thread->state = BLOCKED;
         uthread_yield();
     }
-    printf(" 188\n");
     // resume from here, collect and free it
-    *retval = thread_to_join->retval;
+    if (retval != NULL){
+        *retval = thread_to_join->retval;
+    }
     uthread_ctx_destroy_stack(thread_to_join->stack);
-    printf(" 192\n");
     free(thread_to_join);
 
     return 0;
