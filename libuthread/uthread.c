@@ -72,6 +72,9 @@ int uthread_stop(void)
 
 int uthread_create(uthread_func_t func)
 {
+    if (func == NULL) {
+        return -1;
+    }
     // create new stack object
     TCB_t thread = (TCB_t) malloc(sizeof(struct TCB));
     void* stack;
