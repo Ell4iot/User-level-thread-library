@@ -2,20 +2,28 @@
 targets:= libuthread
 lib := libuthread.a
 CC := gcc
-CFLAGS := -Wall -Werror -Wextra
+CFLAGS := -Wall -Werror -Wextra -MMD
 objs := queue.o context.o uthread.o preempt.o
 AR := ar rcs
 all: $(targets)
-	
+
+deps := $(patsubst %.o,%.d,$(objs))
+-include $(deps)
+
+ifneq ($(V),1)
+Q=@
+endif
+
 libuthread: $(objs)
 	@echo "AR $@"
-	@$(AR) $(lib) $^
+	$(Q)$(AR) $(lib) $^
 
 %.o: %.c
 	@echo "CC $@"
-	@$(CC) -c $< -o $@
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(lib) $(objs)
+	@echo "CLEAN"
+	$(Q)rm -f $(lib) $(objs) $(deps)
 ## TODO 
 ###TEST COMMENT
