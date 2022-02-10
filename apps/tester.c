@@ -29,7 +29,11 @@ int thread2(void)
         }
         i++;
     }
+<<<<<<< Updated upstream
 
+=======
+    printf("i am 2\n");
+>>>>>>> Stashed changes
     return 1;
 }
 
