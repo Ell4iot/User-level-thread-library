@@ -40,22 +40,18 @@ int thread1(void)
 }
 
 int main(void) {
-    int retval;
     uthread_t t1;
     uthread_t t2;
     uthread_t t3;
 
-
-    while (1) {
-        uthread_start(0);
-        t1 = uthread_create(thread1);
-        t2 = uthread_create(thread2);
-        t3 = uthread_create(thread3);
-        uthread_join(t1, NULL);
-        uthread_join(t2, NULL);
-        uthread_join(t3, NULL);
-        uthread_stop();
-    }
+    uthread_start(0);
+    t1 = uthread_create(thread1);
+    t2 = uthread_create(thread2);
+    t3 = uthread_create(thread3);
+    uthread_join(t1, NULL);
+    uthread_join(t2, NULL);
+    uthread_join(t3, NULL);
+    uthread_stop();
 
 
     return 0;
