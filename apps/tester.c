@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 #include <uthread.h>
 uthread_t t1;
 uthread_t t2;
@@ -15,7 +15,7 @@ int thread3(void)
         }
         i++;
     }
-    printf("i am 3\n");
+
     return 1;
 
 }
@@ -29,7 +29,7 @@ int thread2(void)
         }
         i++;
     }
-    printf("i am 2\n");
+
     return 1;
 }
 
@@ -42,8 +42,7 @@ int thread1(void)
         }
         i++;
     }
-    uthread_yield();
-    printf("i am 1\n");
+
     return 1;
 }
 
@@ -51,22 +50,23 @@ int main(void) {
 
 
     uthread_start(0);
+    printf("doing the while loop");
+    while(1) {
+
+    }
     t1 = uthread_create(thread1);
-    printf("create thread 1\n");
+
     t2 = uthread_create(thread2);
 
-    printf("create thread 2\n");
     t3 = uthread_create(thread3);
-    printf("create thread 3\n");
+
 
     uthread_join(t1, NULL);
-    printf("finish join t1\n");
-    uthread_join(t2, NULL);
-    printf("finish join t2\n");
-    uthread_join(t3, NULL);
-    printf("finish join t3\n");
-    uthread_stop();
 
+    uthread_join(t2, NULL);
+
+    uthread_join(t3, NULL);
+    uthread_stop();
 
     return 0;
 }

@@ -124,24 +124,26 @@ void uthread_yield(void)
 {
     preempt_disable();
     //printf("tid is %hu\n", uthread_self());
-    if ((running_thread->state) == NORMAL) {
-        //printf("line 127   i am not a zombie???\n");
-        queue_enqueue(ready_queue, running_thread);
-        //printf("line 108, current queue length: %d\n", queue_length
-        //(ready_queue));
+    if (queue_length(ready_queue) != 0) {
+        if ((running_thread->state) == NORMAL) {
+            //printf("line 127   i am not a zombie???\n");
+            queue_enqueue(ready_queue, running_thread);
+            //printf("line 108, current queue length: %d\n", queue_length
+            //(ready_queue));
+        }
+
+        TCB_t previous_running = running_thread;
+
+        queue_dequeue(ready_queue,(void**)&running_thread);
+
+        //printf("in yield, after dequeue, the queue length is %d\n", queue_length
+
+        //printf("line 117, %hu\n", previous_running->TID);
+        //printf("line 118, %hu\n", running_thread->TID);
+
+        uthread_ctx_switch(&(previous_running->context),
+                           &(running_thread->context));
     }
-
-    TCB_t previous_running = running_thread;
-
-    queue_dequeue(ready_queue,(void**)&running_thread);
-
-    //printf("in yield, after dequeue, the queue length is %d\n", queue_length
-
-    //printf("line 117, %hu\n", previous_running->TID);
-    //printf("line 118, %hu\n", running_thread->TID);
-
-    uthread_ctx_switch(&(previous_running->context),
-                       &(running_thread->context));
     preempt_enable();
 }
 
@@ -166,7 +168,7 @@ void uthread_exit(int retval)
         // need someone to collect them
         queue_enqueue(zombie_queue, running_thread);
     }
-    //preempt_enable();
+    preempt_enable();
     //printf("calling yield inside exit\n");
     preempt_enable();
     uthread_yield();
@@ -187,8 +189,8 @@ static int find_item(queue_t q, void *data, void *arg)
 
 int uthread_join(uthread_t tid, int *retval)
 {
+   //preempt_disable();
     preempt_disable();
-    //preempt_disable();
     if (tid == 0) {
         // main can not be joined
         return -1;
