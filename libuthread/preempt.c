@@ -27,7 +27,7 @@ void alarm_handler(int signum)
     handler_time++;
 
     printf("signal received: %d\n", handler_time);
-    //uthread_yield();
+    uthread_yield();
 }
 
 
@@ -36,7 +36,7 @@ void preempt_start(void)
 	/* TODO */
     memset (&new, 0, sizeof (new));
     new.sa_handler = &alarm_handler;
-    int resultt = sigaction(SIGVTALRM, &new, NULL);
+    sigaction(SIGVTALRM, &new, NULL);
     //printf("line 39 sigaction result%d\n", resultt);
 
 
@@ -46,7 +46,7 @@ void preempt_start(void)
     new_timer.it_interval.tv_sec = 0;
     new_timer.it_interval.tv_usec = 10000;
     handler_time = 0;
-    int result = setitimer(ITIMER_VIRTUAL, &new_timer, NULL);
+    setitimer(ITIMER_VIRTUAL, &new_timer, NULL);
     //printf("line 49 setitimer result%d\n", result);
     //preempt_enable();
 }
