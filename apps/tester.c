@@ -24,6 +24,9 @@ int thread2(void)
 
     }
 
+    printf("i am 2\n");
+
+
     return 1;
 }
 
