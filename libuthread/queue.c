@@ -59,7 +59,7 @@ int queue_enqueue(queue_t queue, void *data)
         queue->tail->nextnode = newnode;
         queue->tail = newnode;
     }
-    queue->count ++;
+    (queue->count)++;
     return 0;
 }
 
@@ -84,7 +84,7 @@ int queue_dequeue(queue_t queue, void **data)
     }else {
         queue->head = NULL;
     }
-    queue->count --;
+    (queue->count)--;
     free(temp);
     return 0;
 }

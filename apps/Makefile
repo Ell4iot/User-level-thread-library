@@ -2,7 +2,8 @@
 programs := \
 	queue_tester_example.x \
 	uthread_hello.x \
-	uthread_yield.x
+	uthread_yield.x \
+	tester.x
 
 # User-level thread library
 UTHREADLIB := libuthread
@@ -13,7 +14,7 @@ libuthread := $(UTHREADPATH)/$(UTHREADLIB).a
 all: $(programs)
 
 # Avoid builtin rules and variables
-MAKEFLAGS += -rR
+MAKEFLAGS += -rRmake
 
 # Don't print the commands unless explicitly requested with `make V=1`
 ifneq ($(V),1)
