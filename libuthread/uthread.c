@@ -35,7 +35,6 @@ queue_t ready_queue;
 uthread_t count;
 TCB_t running_thread;
 
-
 int uthread_start(int preempt)
 {
 	/* TODO */
@@ -64,7 +63,7 @@ int uthread_stop(void)
 {
     preempt_disable();
     preempt_stop();
-    printf("%d\n", handler_time);
+
     if (handler_time == 100000) {
         return 3;
     }
@@ -125,6 +124,7 @@ int uthread_create(uthread_func_t func)
 void uthread_yield(void)
 {
     preempt_disable();
+    printf("tid is %hu", uthread_self());
     if ((running_thread->state) == NORMAL) {
         queue_enqueue(ready_queue, running_thread);
         //printf("line 108, current queue length: %d\n", queue_length
@@ -172,7 +172,6 @@ static int find_item(queue_t q, void *data, void *arg)
         //printf("catch the pid\n");
         return 1;
     }
-
     return 0;
 }
 

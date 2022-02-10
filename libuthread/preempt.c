@@ -25,6 +25,7 @@ void alarm_handler(int signum)
 {
     (void)signum;
     handler_time++;
+    printf("%d\n", handler_time);
     uthread_yield();
 }
 
