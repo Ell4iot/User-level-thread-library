@@ -8,10 +8,12 @@ AR := ar rcs
 all: $(targets)
 	
 libuthread: $(objs)
-	$(AR) $(lib) $^
+	@echo "AR $@"
+	@$(AR) $(lib) $^
 
-%.o: %.c 
-	$(CC) -c $< -o $@
+%.o: %.c
+	@echo "CC $@"
+	@$(CC) -c $< -o $@
 
 clean:
 	rm -f $(lib) $(objs)
