@@ -29,7 +29,7 @@ int thread2(void)
         }
         i++;
     }
-    printf("i am 1\n");
+    printf("i am 2\n");
     return 1;
 }
 
