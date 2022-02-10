@@ -24,9 +24,9 @@ int handler_time;
 void alarm_handler(int signum)
 {
     (void)signum;
-    //handler_time++;
-    printf("waht?\n");
-    //printf("28888  %d\n", handler_time);
+    handler_time++;
+
+    printf("28888  %d\n", handler_time);
     //uthread_yield();
 }
 
