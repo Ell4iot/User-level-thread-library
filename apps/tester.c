@@ -29,7 +29,9 @@ int thread2(void)
         }
         i++;
     }
+
     printf("i am 2\n");
+
 
     return 1;
 }
@@ -51,7 +53,7 @@ int main(void) {
 
 
     uthread_start(0);
-    printf("doing the while loop");
+    printf("doing the while loop\n");
     while(1) {
 
     }
