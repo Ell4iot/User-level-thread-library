@@ -50,7 +50,7 @@ int uthread_start(int preempt)
         return -1;
     }
 
-    uthread_ctx_t uctx;
+    uthread_ctx_t uctx ;
     count = 0;
     thread->TID = 0;
     thread->context = uctx;
