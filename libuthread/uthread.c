@@ -50,10 +50,10 @@ int uthread_start(int preempt)
         return -1;
     }
 
-    uthread_ctx_t uctx;
+
     count = 0;
     thread->TID = 0;
-    thread->context = uctx;
+
 
     running_thread = thread;
     preempt_start();
@@ -92,7 +92,6 @@ int uthread_create(uthread_func_t func)
     }
     count++;
     preempt_enable();
-
     thread->TID = count;
 
     // allocate stack segment
@@ -106,6 +105,7 @@ int uthread_create(uthread_func_t func)
     // initialize context
     if (uthread_ctx_init(&uctx, stack, func) == -1) {
         // failure
+        printf("failure 110\n");
         return -1;
     }
     thread->context = uctx;
@@ -117,13 +117,15 @@ int uthread_create(uthread_func_t func)
     queue_enqueue(ready_queue, thread);
 
     preempt_enable();
+    printf("122 queue len %d\n", queue_length(ready_queue));
+
     return thread->TID;
 }
 
 void uthread_yield(void)
 {
-    preempt_disable();
-    //printf("tid is %hu\n", uthread_self());
+
+    printf("////// tid is %hu\n", uthread_self());
     if (queue_length(ready_queue) != 0) {
         if ((running_thread->state) == NORMAL) {
             //printf("line 127   i am not a zombie???\n");
@@ -144,12 +146,12 @@ void uthread_yield(void)
         uthread_ctx_switch(&(previous_running->context),
                            &(running_thread->context));
     }
-    preempt_enable();
+
 }
 
 uthread_t uthread_self(void)
 {
-    preempt_disable();
+
 	return running_thread->TID;
 }
 
@@ -235,7 +237,6 @@ int uthread_join(uthread_t tid, int *retval)
     uthread_ctx_destroy_stack(thread_to_join->stack);
     free(thread_to_join);
     return 0;
-
 }
 
 
