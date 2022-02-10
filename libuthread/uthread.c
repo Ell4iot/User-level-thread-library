@@ -28,11 +28,10 @@ struct TCB {
     struct TCB* parent; // "parent" which is waiting you
 };
 
+
 typedef struct TCB* TCB_t;
 
 queue_t ready_queue;
-// queue_t block_queue = queue_create();
-//queue_t zombie_queue;
 uthread_t count;
 TCB_t running_thread;
 
@@ -42,7 +41,6 @@ int uthread_start(int preempt)
 	/* TODO */
     (void)preempt;
     ready_queue = queue_create();
-    //zombie_queue = queue_create();
 
     // create the main thread pointer
     TCB_t thread = (TCB_t) malloc(sizeof(struct TCB));
@@ -55,12 +53,21 @@ int uthread_start(int preempt)
     count = 0;
     thread->TID = 0;
     thread->context = uctx;
+
+
     running_thread = thread;
+    preempt_start();
 	return 0;
 }
 
 int uthread_stop(void)
 {
+    preempt_disable();
+    preempt_stop();
+    printf("%d\n", handler_time);
+    if (handler_time == 100000) {
+        return 3;
+    }
 	/* TODO */
     if (queue_length(ready_queue) != 0) {
         return -1;
@@ -80,12 +87,15 @@ int uthread_create(uthread_func_t func)
     void* stack;
     uthread_ctx_t uctx;
 
+    preempt_disable();
     // creatre TID
     if (count == USHRT_MAX) {
         // failure
         return -1;
     }
     count++;
+    preempt_enable();
+
     thread->TID = count;
 
     // allocate stack segment
@@ -105,12 +115,16 @@ int uthread_create(uthread_func_t func)
     thread->state = NORMAL;
     thread->parent = NULL;
     thread->child = NULL;
+
+    preempt_disable();
     queue_enqueue(ready_queue, thread);
+    preempt_enable();
     return thread->TID;
 }
 
 void uthread_yield(void)
 {
+    preempt_disable();
     if ((running_thread->state) == NORMAL) {
         queue_enqueue(ready_queue, running_thread);
         //printf("line 108, current queue length: %d\n", queue_length
@@ -122,8 +136,10 @@ void uthread_yield(void)
     queue_dequeue(ready_queue,(void**)&running_thread);
     //printf("line 117, %hu\n", previous_running->TID);
     //printf("line 118, %hu\n", running_thread->TID);
+
     uthread_ctx_switch(&(previous_running->context),
                        &(running_thread->context));
+    preempt_enable();
 }
 
 uthread_t uthread_self(void)
@@ -134,6 +150,7 @@ uthread_t uthread_self(void)
 void uthread_exit(int retval)
 {
 	/* TODO */
+    preempt_disable();
     running_thread->retval = retval;
     running_thread->state = ZOMBIE;
     // unblock the parent
@@ -141,6 +158,7 @@ void uthread_exit(int retval)
         running_thread->parent->state = NORMAL;
     }
     queue_enqueue(ready_queue, running_thread->parent);
+    preempt_enable();
     uthread_yield();
 }
 
@@ -160,6 +178,7 @@ static int find_item(queue_t q, void *data, void *arg)
 
 int uthread_join(uthread_t tid, int *retval)
 {
+    preempt_disable();
     if (tid == 0) {
         // main can not be joined
         return -1;
@@ -169,7 +188,9 @@ int uthread_join(uthread_t tid, int *retval)
     }
     // find in the queue whether is joined or not
     TCB_t thread_to_join = NULL;
+
     queue_iterate(ready_queue, find_item, (void*)&tid, (void**)&thread_to_join);
+    preempt_enable();
     if (thread_to_join == NULL) {
         // tid not found
         //printf("tid %hu not found\n", tid);
@@ -180,11 +201,14 @@ int uthread_join(uthread_t tid, int *retval)
         return -1;
     }
     thread_to_join->parent = running_thread;
+    preempt_disable();
+
     running_thread->child = thread_to_join;
     if (thread_to_join->state != ZOMBIE) {
         running_thread->state = BLOCKED;
         uthread_yield();
     }
+    preempt_enable();
     // resume from here, collect and free it
     if (retval != NULL){
         *retval = thread_to_join->retval;
