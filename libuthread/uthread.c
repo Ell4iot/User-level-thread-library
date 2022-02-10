@@ -56,14 +56,14 @@ int uthread_start(int preempt)
     thread->context = uctx;
 
     running_thread = thread;
-    //preempt_start();
+    preempt_start();
 	return 0;
 }
 
 int uthread_stop(void)
 {
-    //preempt_disable();
-    //preempt_stop();
+    preempt_disable();
+    preempt_stop();
 
 	/* TODO */
     if (queue_destroy(ready_queue) == -1) {
@@ -84,14 +84,14 @@ int uthread_create(uthread_func_t func)
     void* stack;
     uthread_ctx_t uctx;
 
-    //preempt_disable();
+    preempt_disable();
     // creatre TID
     if (count == USHRT_MAX) {
         // failure
         return -1;
     }
     count++;
-    //preempt_enable();
+    preempt_enable();
 
     thread->TID = count;
 
@@ -116,14 +116,13 @@ int uthread_create(uthread_func_t func)
     preempt_disable();
     queue_enqueue(ready_queue, thread);
 
-
     preempt_enable();
     return thread->TID;
 }
 
 void uthread_yield(void)
 {
-    //preempt_disable();
+    preempt_disable();
     //printf("tid is %hu\n", uthread_self());
     if ((running_thread->state) == NORMAL) {
         //printf("line 127   i am not a zombie???\n");
@@ -143,18 +142,19 @@ void uthread_yield(void)
 
     uthread_ctx_switch(&(previous_running->context),
                        &(running_thread->context));
-    //preempt_enable();
+    preempt_enable();
 }
 
 uthread_t uthread_self(void)
 {
+    preempt_disable();
 	return running_thread->TID;
 }
 
 void uthread_exit(int retval)
 {
 	/* TODO */
-    //preempt_disable();
+    preempt_disable();
     running_thread->retval = retval;
     running_thread->state = ZOMBIE;
     //printf("running tid: %d is exiting\n", running_thread->TID);
@@ -168,6 +168,7 @@ void uthread_exit(int retval)
     }
     //preempt_enable();
     //printf("calling yield inside exit\n");
+    preempt_enable();
     uthread_yield();
 }
 
@@ -186,7 +187,7 @@ static int find_item(queue_t q, void *data, void *arg)
 
 int uthread_join(uthread_t tid, int *retval)
 {
-
+    preempt_disable();
     //preempt_disable();
     if (tid == 0) {
         // main can not be joined
@@ -215,9 +216,7 @@ int uthread_join(uthread_t tid, int *retval)
             return -1;
         } else {
             // beginning yielding
-
             thread_to_join->parent = running_thread;
-            //preempt_disable();
             running_thread->child = thread_to_join;
             running_thread->state = BLOCKED;
             //printf("calling yield inside join\n");
@@ -226,6 +225,7 @@ int uthread_join(uthread_t tid, int *retval)
     }
     thread_to_join->parent = running_thread;
     running_thread->child = thread_to_join;
+    preempt_enable();
     // free the thread
     if (retval != NULL){
         *retval = thread_to_join->retval;
