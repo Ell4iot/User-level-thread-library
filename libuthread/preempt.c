@@ -45,7 +45,6 @@ void preempt_start(void)
 
     new_timer.it_interval.tv_sec = 0;
     new_timer.it_interval.tv_usec = 10000;
-    handler_time = 0;
     setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer);
 
     preempt_enable();
