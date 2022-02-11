@@ -35,11 +35,11 @@ queue_t ready_queue;
 queue_t zombie_queue;
 uthread_t count;
 TCB_t running_thread;
+TCB_t main_thread;
+int preempt_indicator;
 
 int uthread_start(int preempt)
 {
-	/* TODO */
-    (void)preempt;
     ready_queue = queue_create();
     zombie_queue = queue_create();
 
@@ -49,28 +49,48 @@ int uthread_start(int preempt)
         // failure
         return -1;
     }
-
-
     count = 0;
     thread->TID = 0;
 
-
     running_thread = thread;
-    preempt_start();
+    main_thread = thread;
+    if (preempt) {
+        // set the global preempt var to true
+        // we need this variable in uthread_stop
+        preempt_indicator = 1;
+        preempt_start();
+    }
 	return 0;
 }
 
 int uthread_stop(void)
 {
     preempt_disable();
-    preempt_stop();
 
-	/* TODO */
-    if (queue_destroy(ready_queue) == -1) {
+	if (running_thread->TID != 0) {
+        // only the main thread can call this function
+        preempt_enable();
         return -1;
-    } else if (queue_destroy(zombie_queue) == -1) {
+
+    }
+
+    if (queue_destroy(ready_queue) == -1) {
+        // ready_queue is not empty
+        preempt_enable();
         return -1;
     }
+
+    if (queue_destroy(zombie_queue) == -1) {
+        // zombie_queue is not empty
+        preempt_enable();
+        return -1;
+    }
+
+    if (preempt_indicator) {
+        // only called "if reemption was enabled."
+        preempt_stop();
+    }
+    free(main_thread);
     return 0;
 }
 
@@ -105,7 +125,6 @@ int uthread_create(uthread_func_t func)
     // initialize context
     if (uthread_ctx_init(&uctx, stack, func) == -1) {
         // failure
-        printf("failure 110\n");
         return -1;
     }
     thread->context = uctx;
@@ -115,53 +134,36 @@ int uthread_create(uthread_func_t func)
 
     preempt_disable();
     queue_enqueue(ready_queue, thread);
-
     preempt_enable();
-    printf("122 queue len %d\n", queue_length(ready_queue));
 
     return thread->TID;
 }
 
 void uthread_yield(void)
 {
-
-    printf("////// tid is %hu\n", uthread_self());
+    preempt_disable();
     if (queue_length(ready_queue) != 0) {
         if ((running_thread->state) == NORMAL) {
-            //printf("line 127   i am not a zombie???\n");
             queue_enqueue(ready_queue, running_thread);
-            //printf("line 108, current queue length: %d\n", queue_length
-            //(ready_queue));
         }
-
         TCB_t previous_running = running_thread;
-
         queue_dequeue(ready_queue,(void**)&running_thread);
-
-        //printf("in yield, after dequeue, the queue length is %d\n", queue_length
-
-        //printf("line 117, %hu\n", previous_running->TID);
-        //printf("line 118, %hu\n", running_thread->TID);
-
         uthread_ctx_switch(&(previous_running->context),
                            &(running_thread->context));
     }
-
 }
 
 uthread_t uthread_self(void)
 {
-
 	return running_thread->TID;
 }
 
 void uthread_exit(int retval)
 {
-	/* TODO */
     preempt_disable();
     running_thread->retval = retval;
     running_thread->state = ZOMBIE;
-    //printf("running tid: %d is exiting\n", running_thread->TID);
+    printf("running tid: %d is exiting\n", running_thread->TID);
     // unblock the parent
     if (running_thread->parent != NULL) {
         running_thread->parent->state = NORMAL;
@@ -170,8 +172,6 @@ void uthread_exit(int retval)
         // need someone to collect them
         queue_enqueue(zombie_queue, running_thread);
     }
-    preempt_enable();
-    //printf("calling yield inside exit\n");
     preempt_enable();
     uthread_yield();
 }

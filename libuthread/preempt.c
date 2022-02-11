@@ -15,11 +15,12 @@
  */
 #define HZ 100
 
-struct sigaction new;
-struct sigaction old;
+struct sigaction new_action;
+struct sigaction old_action;
 struct itimerval new_timer;
 struct itimerval old_timer;
 int handler_time;
+sigset_t block;
 
 void alarm_handler(int signum)
 {
@@ -34,10 +35,12 @@ void alarm_handler(int signum)
 void preempt_start(void)
 {
 	/* TODO */
-    memset (&new, 0, sizeof (new));
-    new.sa_handler = &alarm_handler;
-    sigaction(SIGVTALRM, &new, NULL);
-    //printf("line 39 sigaction result%d\n", resultt);
+    memset (&new_action, 0, sizeof (new_action));
+    new_action.sa_handler = &alarm_handler;
+    sigaction(SIGVTALRM, &new_action, &old_action);
+
+    sigemptyset(&block);
+    sigaddset(&block, SIGVTALRM);
 
 
     new_timer.it_value.tv_sec = 0;
@@ -46,37 +49,39 @@ void preempt_start(void)
     new_timer.it_interval.tv_sec = 0;
     new_timer.it_interval.tv_usec = 10000;
     handler_time = 0;
-    setitimer(ITIMER_VIRTUAL, &new_timer, NULL);
-    //printf("line 49 setitimer result%d\n", result);
-    //preempt_enable();
+    setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer);
+
+    preempt_enable();
 }
 
 void preempt_stop(void)
 {
-	/* TODO */
+
     preempt_disable();
+
+    // disarm the timer
     new_timer.it_value.tv_sec = 0;
     new_timer.it_value.tv_usec = 0;
-    new.sa_handler = SIG_DFL;
-    sigaction(SIGVTALRM, &new, &old);
-    setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer);
+    setitimer(ITIMER_VIRTUAL, &new_timer, NULL);
+    // restore previous timer
+    setitimer(ITIMER_VIRTUAL, &old_timer, NULL);
+
+    // uninstall the handler
+    new_action.sa_handler = SIG_DFL;
+    sigaction(SIGVTALRM, &new_action, NULL);
+    // restore previous action
+    sigaction(SIGVTALRM, &old_action, NULL);
+
+
 }
 
 void preempt_enable(void)
 {
-	/* TODO */
-    sigset_t block;
-    sigemptyset(&block);
-    sigaddset(&block, SIGVTALRM);
     sigprocmask(SIG_UNBLOCK, &block, NULL);
 }
 
 void preempt_disable(void)
 {
-	/* TODO */
-    sigset_t block;
-    sigemptyset(&block);
-    sigaddset(&block, SIGVTALRM);
     sigprocmask(SIG_BLOCK, &block, NULL);
 }
 
