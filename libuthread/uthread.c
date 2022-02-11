@@ -181,7 +181,6 @@ static int find_item(queue_t q, void *data, void *arg)
     (void)q; //unused
 
     if (temp->TID == *match) {
-        //printf("catch the pid\n");
         return 1;
     }
     return 0;
@@ -189,7 +188,7 @@ static int find_item(queue_t q, void *data, void *arg)
 
 int uthread_join(uthread_t tid, int *retval)
 {
-   //preempt_disable();
+   preempt_disable();
     preempt_disable();
     if (tid == 0) {
         // main can not be joined
@@ -206,9 +205,6 @@ int uthread_join(uthread_t tid, int *retval)
     // find in the queue whether is joined or not
     TCB_t thread_to_join = NULL;
 
-    //printf("line 19000000000000\n");
-    //printf("    join queue length is: %d\n", queue_length(ready_queue));
-
     queue_iterate(zombie_queue, find_item, (void*)&tid, (void**)&thread_to_join);
     if (thread_to_join == NULL) {
         queue_iterate(ready_queue, find_item, (void*)&tid, (void**)&thread_to_join);
@@ -221,7 +217,6 @@ int uthread_join(uthread_t tid, int *retval)
             thread_to_join->parent = running_thread;
             running_thread->child = thread_to_join;
             running_thread->state = BLOCKED;
-            //printf("calling yield inside join\n");
             uthread_yield();
         }
     }
