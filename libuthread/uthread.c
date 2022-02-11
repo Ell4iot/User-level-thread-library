@@ -140,7 +140,7 @@ int uthread_create(uthread_func_t func)
 
 void uthread_yield(void)
 {
-
+    preempt_disable();
     if (queue_length(ready_queue) != 0) {
         if ((running_thread->state) == NORMAL) {
             queue_enqueue(ready_queue, running_thread);
