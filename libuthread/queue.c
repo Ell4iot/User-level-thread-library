@@ -45,7 +45,9 @@ int queue_enqueue(queue_t queue, void *data)
     /* TODO */
     node_t newnode = (node_t)malloc(sizeof(struct node));
     newnode->data = data;
-
+    if ((queue == NULL) || (data == NULL)) {
+        return -1;
+    }
     if (queue->head == NULL) {
         // queue is empty
         queue->head = newnode;
