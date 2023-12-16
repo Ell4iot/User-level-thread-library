@@ -44,7 +44,7 @@ void preempt_start(void)
     new_timer.it_value.tv_usec = 10000;  // 100hz
 
     new_timer.it_interval.tv_sec = 0;
-    new_timer.it_interval.tv_usec = 10000;
+    new_timer.it_interval.tv_usec = 10000; // micriosecond
     setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer);
 
     preempt_enable();

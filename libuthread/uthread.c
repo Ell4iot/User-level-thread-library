@@ -188,7 +188,6 @@ static int find_item(queue_t q, void *data, void *arg)
 
 int uthread_join(uthread_t tid, int *retval)
 {
-   preempt_disable();
     preempt_disable();
     if (tid == 0) {
         // main can not be joined

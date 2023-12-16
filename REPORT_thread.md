@@ -1,15 +1,19 @@
 # ECS 150: Project #2 - User-level thread library
-Author: Yuhang Wang, Jie Shao
+Author: Yuhang Wang
 ## queue API
 I use 2 **struct** to create a **linked list** to represent the **FIFO** queue.
 #### Time complexity
+
 - enqueue and dequeue with linked list is simple. For enqueue, I just check 
-and set the new element as the tail of the queue. For dequeue, I just pop the 
-head. All operations are **O(1).**
+  and set the new element as the tail of the queue. For dequeue, I just pop the 
+  head. All operations are **O(1).**
+
 - **O(1)** `queue_length` is bit tricky with linked list. I add a variable 
-inside the struct to track the length of the queue. Whenever I enqueue or 
-dequeue, I can count++ or count-- respectively. Finally, just use one line to 
-- return the variable in `queue_length` function.
+  inside the struct to track the length of the queue. Whenever I enqueue or 
+  dequeue, I can count++ or count-- respectively. Finally, just use one line to 
+
+  return the variable in `queue_length` function.
+
 - Create and destroy are simple **O(1)**. Delete and iterate are out of the 
 scope of **O(1)**.
 ## uthread API
@@ -21,7 +25,9 @@ running thread to yield? The secret is using context switch from `context.c.`
 When you want to run a threads' function, you don't need to actually call the 
 function. After initializing the context of threads' function, once we perform 
 a **context switching,** the functioin will automatically continue.
+
 ### Setup
+
 - thread representation
   ```c
   struct TCB {
@@ -40,17 +46,25 @@ a **context switching,** the functioin will automatically continue.
   - `child` and `parent`: Threads joining someone need to free it after it dies. 
   - With the two members being stored, `uthread_join()` can access the "child" 
   thread and free it in **O(1**).
+  
 - I then create two queues as **global variables**, and a **global** `TCB` 
-- variable named `running_thread`, the thread currently exectuing.
+
+  variable named `running_thread`, the thread currently exectuing.
+
 ### uthread_start
+
 Registering the `main` as a thread with `TID = 0.` Noticing that the stack and 
 `context` of `main` do not need to be initialized. Creating the `TCB` object is 
 enough.
+
 ### uthread_create
+
 Initializing threads' context and stack via functions from context.c. Seting the 
 state of threads to `NORMAL` and enqueue to `ready_queue`.
+
 ### uthread_yield
-- If the **length** of `ready_queu`e is 0, we know that it is the only thread 
+
+- If the **length** of `ready_queue` is 0, we know that it is the only thread 
 which can running. We then don't perform the yield and simply do nothing, 
 otherwise it will result in an **endless loop**.
 - Before doing **context switching**, we also check the **state** of the thread 
@@ -61,9 +75,12 @@ needs to run again after `yield`,thus we directly `enqueue` it to the
 `ready_queue`.
 - When doing **context switching**, just **dequeue** the thread from 
 `ready_queue` and call `uthread_ctx_switch`.
+
 ### uthread_exit
+
 This function is called inside the `uthread_ctx_bootstrap` with argument of 
 `func`.
+
 - We have `retval` as a member inside the `TCB` struct. We then store the 
 argument to the retval for joining thread to collect it. Then, setting the state 
 to `ZOMBIE`.
@@ -77,7 +94,7 @@ to `ZOMBIE`.
 - We have various error checking in this function, for exmaple: joining oneself,
 child joining parent, etc.
 - Then, we need to find the thread to join from the two queues we created: 
-`ready_queue` and `zombie_queue` by using `queue_iterate`.
+  `ready_queue` and `zombie_queue` by using `queue_iterate`.
   - If find in the ready_queue, the thread is still an active thread, we need 
   to make sure this   thread does not have parent yet. 
   `thread_to_join->parent != NULL`. Then, we register parent and child: 
@@ -93,6 +110,7 @@ We need to have access to the **timer** as well as the **action** within five
 different functions. In addition, we should be able to restore the previous 
 signal action and timer configuration. Thus, I create 4 global variables inside 
 preempt.c.
+
 ```c
 struct sigaction new_action;
 struct sigaction old_action;
@@ -105,6 +123,7 @@ struct itimerval old_timer;
 - we need to change the members inside this struct. `it_interval` and `it_value` 
 - represents continuous alarm interval and time until the first alarm.
 - `tv_sec` represents whole seconds and `tv_nsec` represents nanoseconds.
+  
   ```c
   new_timer.it_value.tv_sec = 0;
   new_timer.it_value.tv_usec = 10000;    // 100 Hz
@@ -122,7 +141,7 @@ struct itimerval old_timer;
   - Then, we need to call setitimer again with the old_timer we previously saved 
   to restore it.
 - To uninstall the sigaction, just set sa_handler to **`SIG_DFL`** and call 
-sigaction.
+  sigaction.
   - Same procedure for sigaction, we need to call it again to restore to 
   previous action.
 ### preempt enable and disable
@@ -130,7 +149,7 @@ The two functions can be realized with one simple line of code respectively.
 - We have already set `sigset_t block;` as a global variable and initialize it 
 in the **`preempt_start`** function.
 - The following code means set `block` as an empty signal set and add the 
-virtual alarm signal `SIGVTALRM` to it.
+  virtual alarm signal `SIGVTALRM` to it.
   ```c
   sigemptyset(&block);
   sigaddset(&block, SIGVTALRM);
@@ -151,16 +170,16 @@ own.
    }
    ```
 2. I then let main thread to join the thread 1, when it yields to thread1, if 
-the timer and sigaction is working right, it should continuously yielding 
-between the three threads, because they never end. I print a line inside the 
-uthread_yield function, as well as the alarm_handler function.
+   the timer and sigaction is working right, it should continuously yielding 
+   between the three threads, because they never end. I print a line inside the 
+   uthread_yield function, as well as the alarm_handler function.
    ```c
    // first one will be printed inside the uthread_yield function
    
    printf("tid: %hu wants to yield", running_thread->TID);
    ```
 3. Here is the result, and I manully press `ctrl + c` to escape the endless 
-loop.
+   loop.
    ```c
    yuhwang@ad3.ucdavis.edu@pc19:~/ecs150/uthread/apps$ ./tester.x
    begin to join thread1
@@ -197,7 +216,6 @@ loop.
 I create a timer with 10Hz and set it to old_timer. Right after 
 uthread_start, I call uthread_stop, and then call uthread_start and it then 
 sending the signal in 10Hz as the old_timer we stored.
-   
 
 
 

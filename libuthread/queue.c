@@ -8,6 +8,8 @@
 struct node {
     void* data;
     struct node* nextnode;
+    char data[80];
+    int likes;
 };
 
 typedef struct node* node_t;
@@ -118,6 +120,7 @@ int queue_delete(queue_t queue, void *data)
 
     int counter = 0;
     // in case the function modify the length of the queue
+    // copied from my iterate function
     int original_len = queue->count;
 
     node_t iterator, temp;
